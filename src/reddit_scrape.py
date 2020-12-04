@@ -1,13 +1,12 @@
 from datetime import datetime
-from reddit_scraper_utils import getRedditSoup, getPostsFromFirstSoup, getPostsAfterFirstSoup, getProcessedPosts
+from utils.reddit_scraper_utils import getRedditSoup, getPostsFromFirstSoup, getPostsAfterFirstSoup, getProcessedPosts
 import json
 import sys, getopt
-from Constants import BASE_URL, URL_AFTER_ID
+from common.Constants import BASE_URL, URL_AFTER_ID
 
 sub_name = ""
-sort_by = "new" # new, top, controversial, rising, hot
+sort_by = "hot" # new, top, controversial, rising, hot
 limit = 25
-return_keys = []
 verbose = False
 save_to_file = True
 
@@ -29,7 +28,7 @@ for opt, arg in opts:
     elif opt == "--save-to-file":
         save_to_file = True if arg.lower().strip() == "true" else False
 
-filename = "{sub_name}_{sort_by}_{limit}_verbose={verbose}_{date}".format(
+filename = "../dump/{sub_name}_{sort_by}_{limit}_verbose={verbose}_{date}".format(
     sub_name=sub_name,
     sort_by=sort_by,
     limit=limit,
@@ -72,7 +71,7 @@ while (posts_count < limit):
 
     post_objects, post_ids = getProcessedPosts(
         posts, 
-        return_keys=return_keys, 
+        return_keys=[], 
         verbose=verbose
     )
     post_objects_list.extend(post_objects)
