@@ -1,19 +1,20 @@
-from datetime import datetime
-from utils.reddit_scraper_utils import getRedditSoup, getPostsFromFirstSoup, getPostsAfterFirstSoup, getProcessedPosts
-import json
-import sys, getopt
-from common.Constants import BASE_URL, URL_AFTER_ID
+import sys
+import getopt
+from managers.RequestManager import RequestManager
+from postscraper import PostScraper
 
 sub_name = ""
 sort_by = "hot" # new, top, controversial, rising, hot
 limit = 25
 verbose = False
-save_to_file = True
+
+request_manager = RequestManager()
+post_scraper = PostScraper()
 
 opts, args = getopt.getopt(
     sys.argv[1:], 
     "",
-    ["subreddit=","sort-by=","limit=","verbose=","save-to-file="]
+    ["subreddit=","sort-by=","limit=","verbose=","filename="]
 )
 
 for opt, arg in opts:
@@ -24,63 +25,10 @@ for opt, arg in opts:
     elif opt == "--limit":
         limit = int(arg)
     elif opt == "--verbose":
-        verbose = True if arg.lower().strip() == "true" else False
-    elif opt == "--save-to-file":
-        save_to_file = True if arg.lower().strip() == "true" else False
+        verbose = arg.lower().strip() == "true"
+    elif opt == "--filename":
+        if (len(arg.strip()) == 0):
+            print("Filename can't be empty!")
+        filename = arg    
 
-filename = "../dump/{sub_name}_{sort_by}_{limit}_verbose={verbose}_{date}".format(
-    sub_name=sub_name,
-    sort_by=sort_by,
-    limit=limit,
-    verbose=verbose,
-    date = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-)
-
-post_objects_list = []
-post_ids_list = []
-posts_count = 0
-
-subreddit_entered = sub_name != None and len(sub_name) > 0
-
-while (posts_count < limit):
-    if (posts_count == 0):
-        url = BASE_URL
-        if (subreddit_entered):
-            url += "/r/{sub_name}"
-            url = url.format(sub_name=sub_name)
-        url += "/{sort_by}"
-        url = url.format(sort_by=sort_by)
-        subreddit_post_soup = getRedditSoup(url)        
-        posts = getPostsFromFirstSoup(subreddit_post_soup, limit)
-    else:
-        remaining_limit = limit - posts_count
-        if (subreddit_entered):
-            url = URL_AFTER_ID.format(
-                sub_name = sub_name, 
-                last_id=post_ids_list[-1], 
-                sort_by = sort_by
-                )
-        else:
-            url = BASE_URL + "/{sort_by}/?after={last_id}"
-            url = url.format(sort_by=sort_by, last_id=post_ids_list[-1])
-            
-        subreddit_post_soup = getRedditSoup(url)
-
-        posts = getPostsAfterFirstSoup(subreddit_post_soup, remaining_limit)\
-            if (subreddit_entered) else getPostsFromFirstSoup(subreddit_post_soup, remaining_limit)
-
-    post_objects, post_ids = getProcessedPosts(
-        posts, 
-        return_keys=[], 
-        verbose=verbose
-    )
-    post_objects_list.extend(post_objects)
-    post_ids_list.extend(post_ids)
-    posts_count = len(post_objects_list)
-
-    if (posts_count == 0):
-        break
-    
-if (save_to_file):
-    with open(filename, "w") as outfile:
-        json.dump(post_objects_list, outfile, indent=4)
+post_scraper.scrapePosts(sub_name, limit, sort_by, verbose, filename)
