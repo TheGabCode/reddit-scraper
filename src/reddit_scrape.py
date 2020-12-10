@@ -1,6 +1,5 @@
 import sys
 import getopt
-from managers.RequestManager import RequestManager
 from postscraper import PostScraper
 
 sub_name = ""
@@ -8,7 +7,6 @@ sort_by = "hot" # new, top, controversial, rising, hot
 limit = 25
 verbose = False
 
-request_manager = RequestManager()
 post_scraper = PostScraper()
 
 opts, args = getopt.getopt(
