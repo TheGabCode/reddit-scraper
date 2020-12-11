@@ -10,29 +10,6 @@ from commentscraper import CommentScraper
 import argparse
 
 def main():
-    # url = ""
-    # sort_by = "confidence"
-    # opts, _ = getopt.getopt(
-    #     sys.argv[1:], 
-    #     "",
-    #     ["url=", "sort-by=", "filename="]
-    # )
-
-    # for opt, arg in opts:
-    #     if opt == "--url":
-    #         if (len(arg.strip()) == 0):
-    #             print("Url can't be empty!")
-    #         url = arg
-    #         if (url.startswith("https://www")):
-    #             url = url.replace("www", "old", 1)
-    #     elif opt == "--sort-by":
-    #         sort_by = arg if len(arg.strip()) > 0 else sort_by
-    #         url = url + "?sort={sort_by}".format(sort_by = sort_by)
-    #     elif opt == "--filename":
-    #         if (len(arg.strip()) == 0):
-    #             print("Filename can't be empty!")
-    #         filename = arg    
-
     parser = argparse.ArgumentParser(
         description="Reddit comment scrape arguments"
     )
