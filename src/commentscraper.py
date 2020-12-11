@@ -12,8 +12,10 @@ class CommentScraper:
     def parseCommentsFromDocument(self, document, get_children = False):
         comment_objects_list = []
         
-        comments_container = document.find_all("div", class_=["nestedlisting"])[0]
-        container_comments = comments_container.find_all("div", class_="comment")
+        comments_container = document\
+            .find_all("div", class_=["nestedlisting"])[0]
+        container_comments = comments_container\
+            .find_all("div", class_="comment")
         
         if (get_children and len(container_comments) == 1):
             return comment_objects_list
@@ -21,7 +23,7 @@ class CommentScraper:
         first_comment = comments_container\
             .find_all("div", class_="comment")[1 if get_children else 0]
         
-        comment_objects_list.append(self.extractCommentData(first_comment))
+        comment_objects_list.append(self.__extractCommentData(first_comment))
         
         for sibling in first_comment.next_siblings:
             is_tag = isinstance(sibling, Tag)
@@ -29,17 +31,18 @@ class CommentScraper:
             is_morechildren = "morechildren" in sibling["class"]
     
             if (is_tag and is_comment):
-                comment_objects_list.append(self.extractCommentData(sibling))
+                comment_objects_list.append(self.__extractCommentData(sibling))
             elif (is_tag and is_morechildren):
                 subreddit = document\
                 .find("link", {"rel":"canonical"})["href"]\
                 .split("/")[4]
                 
-                comment_objects_list.extend(self.getMoreComments(sibling, subreddit))
+                comment_objects_list\
+                    .extend(self.__getMoreComments(sibling, subreddit))
         
         return comment_objects_list
 
-    def extractCommentData(self, comment_tag, recursive=True):
+    def __extractCommentData(self, comment_tag, recursive=True):
         top_level_comment_object = {}
         
         score_tag = comment_tag.find("span", class_="score unvoted")
@@ -66,14 +69,17 @@ class CommentScraper:
             .find("div", class_="md")
         
         comment_formatted = comment_container.prettify()
-        comment_raw = " ".join([p.text for p in comment_container.find_all("p")])\
+        comment_raw = " "\
+            .join([p.text for p in comment_container.find_all("p")])\
             .strip().rstrip()
         
         top_level_comment_object["score"] = score
         top_level_comment_object["author"] = author
-        top_level_comment_object["date_posted_timestamp"] = date_posted_timestamp
+        top_level_comment_object["date_posted_timestamp"] =\
+             date_posted_timestamp
         top_level_comment_object["date_posted_readable"] = date_posted_readable
-        top_level_comment_object["date_edited_timestamp"] = date_edited_timestamp
+        top_level_comment_object["date_edited_timestamp"] =\
+             date_edited_timestamp
         top_level_comment_object["num_children"] = num_children
         top_level_comment_object["permalink_old"] = permalink_old
         top_level_comment_object["permalink"] = permalink
@@ -84,7 +90,7 @@ class CommentScraper:
             return top_level_comment_object
         else:    
             nested_soup = self.request_manager.getRedditSoup(permalink_old)
-            parsed_replies = parseCommentsFromDocument(nested_soup, True)
+            parsed_replies = self.parseCommentsFromDocument(nested_soup, True)
             
             if (len(parsed_replies) == 0):
                 return top_level_comment_object
@@ -93,7 +99,7 @@ class CommentScraper:
                                                 
             return top_level_comment_object     
 
-    def getMoreComments(self, morecomment_tag, subreddit):
+    def __getMoreComments(self, morecomment_tag, subreddit):
         morecomments_args = morecomment_tag.a["onclick"]\
         .replace("return morechildren", "")\
         .replace("(", "")\
@@ -107,7 +113,8 @@ class CommentScraper:
         renderstyle = "html"
         limit_children = False
         r = subreddit
-        children = ",".join(morecomments_args[3:len(morecomments_args) - 1]).strip()
+        children = ",".join(morecomments_args[3:len(morecomments_args) - 1])\
+            .strip()
         
         payload = {
             "id": data_id,
@@ -131,10 +138,13 @@ class CommentScraper:
             comment_tag_string = html.unescape(comment_content)
             comment_tag_soup = BeautifulSoup(comment_tag_string, "html.parser")
             if (comment["kind"] == "more"):
-                more_comments.extend(self.getMoreComments(
-                    comment_tag_soup.find("div", class_="morechildren"), subreddit)
+                more_comments.extend(self.__getMoreComments(
+                    comment_tag_soup.find("div", class_="morechildren"), 
+                    subreddit
                 )
+            )
             else:            
-                more_comments.append(self.extractCommentData(comment_tag_soup))
+                more_comments\
+                    .append(self.__extractCommentData(comment_tag_soup))
         
         return more_comments

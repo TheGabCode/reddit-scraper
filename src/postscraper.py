@@ -8,17 +8,20 @@ class PostScraper:
     def __init__(self):
         self.request_manager = RequestManager()
 
-    def getPostsFromFirstSoup(self, first_soup, limit):
+    def __getPostsFromFirstSoup(self, first_soup, limit):
         try:
             script_data = first_soup.select('script#data')
             script_data_content = json.dumps(script_data[0].contents[0])
-            script_data_content = script_data_content.replace("window.___r = ", "")
+            script_data_content = script_data_content\
+                .replace("window.___r = ", "")
             script_data_content = json.loads(script_data_content)
             script_data_content_len = len(script_data_content)
-            script_data_content = script_data_content[:script_data_content_len-1]
+            script_data_content = script_data_content\
+                [:script_data_content_len-1]
 
             script_data_dictionary = json.loads(script_data_content)
-            script_data_list = list(script_data_dictionary["posts"]["models"].values())
+            script_data_list = list(script_data_dictionary["posts"]["models"]\
+                .values())
             filtered_list = [
                 post for post in script_data_list 
                     if post['belongsTo']['type'] == 'subreddit' and not 
@@ -32,7 +35,7 @@ class PostScraper:
         except IndexError:
             return []
 
-    def getPostsAfterFirstSoup(self, soup, limit):
+    def __getPostsAfterFirstSoup(self, soup, limit):
         post_list = list(json.loads(soup.text)["posts"].values())
         filtered_list = [
             post for post in post_list 
@@ -46,7 +49,7 @@ class PostScraper:
         
         return filtered_list[:limit]
 
-    def getProcessedPosts(self, posts, return_keys=[], verbose=False):
+    def __getProcessedPosts(self, posts, return_keys=[], verbose=False):
         post_objects = []
         post_ids = []
 
@@ -90,7 +93,10 @@ class PostScraper:
                 url = url.format(sort_by=sort_by)
                 
                 subreddit_post_soup = self.request_manager.getRedditSoup(url)        
-                posts = self.getPostsFromFirstSoup(subreddit_post_soup, limit)
+                posts = self.__getPostsFromFirstSoup(
+                    subreddit_post_soup, 
+                    limit
+                )
             else:
                 remaining_limit = limit - posts_count
                 if (subreddit_entered):
@@ -101,14 +107,23 @@ class PostScraper:
                         )
                 else:
                     url = BASE_URL + "/{sort_by}/?after={last_id}"
-                    url = url.format(sort_by=sort_by, last_id=post_ids_list[-1])
+                    url = url.format(
+                        sort_by=sort_by, 
+                        last_id=post_ids_list[-1]
+                    )
                     
                 subreddit_post_soup = self.request_manager.getRedditSoup(url)
 
-                posts = self.getPostsAfterFirstSoup(subreddit_post_soup, remaining_limit)\
-                    if (subreddit_entered) else self.getPostsFromFirstSoup(subreddit_post_soup, remaining_limit)
+                posts = self.__getPostsAfterFirstSoup(
+                    subreddit_post_soup, 
+                    remaining_limit
+                    )\
+                    if (subreddit_entered) else self.__getPostsFromFirstSoup(
+                        subreddit_post_soup, 
+                        remaining_limit
+                    )
 
-            post_objects, post_ids = self.getProcessedPosts(
+            post_objects, post_ids = self.__getProcessedPosts(
                 posts, 
                 return_keys=[], 
                 verbose=verbose

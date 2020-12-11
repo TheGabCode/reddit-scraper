@@ -1,32 +1,28 @@
-import sys
-import getopt
+import argparse
 from postscraper import PostScraper
 
-sub_name = ""
-sort_by = "hot" # new, top, controversial, rising, hot
-limit = 25
-verbose = False
-
-post_scraper = PostScraper()
-
-opts, args = getopt.getopt(
-    sys.argv[1:], 
-    "",
-    ["subreddit=","sort-by=","limit=","verbose=","filename="]
+parser = argparse.ArgumentParser(description="Reddit scrape arguments")
+parser.add_argument("--subreddit", help="Subreddit you want to scrape")
+parser.add_argument("--sort_by", help="Sort posts by")
+parser.add_argument("--limit", help="Number of posts to scrape")
+parser.add_argument(
+    "--verbose", 
+    action="store_true", 
+    help="If you want to save the exact same object representation "\
+    + "scraped from reddit"
+)
+parser.add_argument(
+    "filename", 
+    help="Name of file you want to store scraped data to"
 )
 
-for opt, arg in opts:
-    if opt == "--subreddit":
-        sub_name = arg
-    elif opt == "--sort-by":
-        sort_by = arg
-    elif opt == "--limit":
-        limit = int(arg)
-    elif opt == "--verbose":
-        verbose = arg.lower().strip() == "true"
-    elif opt == "--filename":
-        if (len(arg.strip()) == 0):
-            print("Filename can't be empty!")
-        filename = arg    
+arguments = parser.parse_args()
 
-post_scraper.scrapePosts(sub_name, limit, sort_by, verbose, filename)
+subreddit = arguments.subreddit if arguments.subreddit else ""
+sort_by = arguments.sort_by if arguments.sort_by else "hot"
+limit = arguments.limit if arguments.limit else 25
+verbose = arguments.verbose
+filename = arguments.filename
+
+post_scraper = PostScraper()
+post_scraper.scrapePosts(subreddit, limit, sort_by, verbose, filename)
