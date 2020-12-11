@@ -1,11 +1,6 @@
 from bs4 import Tag, NavigableString, BeautifulSoup
-import requests
-import random
 import json
-import html
 from managers.RequestManager import RequestManager
-import sys
-import getopt
 from commentscraper import CommentScraper
 import argparse
 
