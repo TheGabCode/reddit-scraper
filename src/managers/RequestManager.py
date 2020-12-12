@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import random
 from common import Constants
+from requests.exceptions import ConnectionError
+
 
 class RequestManager:
     def __init__(self):
@@ -9,7 +11,9 @@ class RequestManager:
 
     def getRedditSoup(self, url):
         headers = {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept": ("text/html,application/xhtml+xml,application/xml;q=0.9"
+                       ",image/avif,image/webp,image/apng,*/*;q=0.8,applicati"
+                       "on/signed-exchange;v=b3;q=0.9"),
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-US, en; q=0.9",
             "sec-fetch-dest": "document",
@@ -19,14 +23,16 @@ class RequestManager:
             "upgrade-insecure-requests": "1",
             "user-agent": self.agents[random.randint(0, len(self.agents))]
         }
-        
-        response = requests.get(url, headers = headers)
-    
-        if (response.status_code != 200):
+
+        try:
+            response = requests.get(url, headers=headers)
+
+            if (response.status_code != 200):
+                return BeautifulSoup("", "html.parser")
+
+            return BeautifulSoup(response.text, "html.parser")
+        except ConnectionError:
             return BeautifulSoup("", "html.parser")
-
-        return BeautifulSoup(response.text, "html.parser")
-
 
     def postRedditSoup(self, url, payload):
         headers = {
@@ -40,10 +46,13 @@ class RequestManager:
             "x-requested-with": "XMLHttpRequest",
             "user-agent": self.agents[random.randint(0, len(self.agents))]
         }
-    
-        response = requests.post(url, headers = headers, data = payload)
-    
-        if (response.status_code != 200):
-            return BeautifulSoup("", "html.parser")
 
-        return BeautifulSoup(response.text, "html.parser")
+        try:
+            response = requests.post(url, headers=headers, data=payload)
+
+            if (response.status_code != 200):
+                return BeautifulSoup("", "html.parser")
+
+            return BeautifulSoup(response.text, "html.parser")
+        except ConnectionError:
+            return BeautifulSoup("", "html.parser")

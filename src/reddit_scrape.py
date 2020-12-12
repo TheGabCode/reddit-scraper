@@ -1,21 +1,20 @@
 import argparse
 from postscraper import PostScraper
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Reddit scrape arguments")
+    parser = argparse.ArgumentParser(
+        description="Reddit post scraper arguments")
     parser.add_argument("--subreddit", help="Subreddit you want to scrape")
     parser.add_argument("--sort_by", help="Sort posts by")
     parser.add_argument("--limit", help="Number of posts to scrape")
     parser.add_argument(
-        "--verbose", 
-        action="store_true", 
-        help="If you want to save the exact same object representation "\
-        + "scraped from reddit"
-    )
-    parser.add_argument(
-        "filename", 
-        help="Name of file you want to store scraped data to"
-    )
+        "--verbose",
+        action="store_true",
+        help=("If you want to save the exact same object representation scrap",
+              "ed from reddit"))
+    parser.add_argument("filename",
+                        help="Name of file you want to store scraped data to")
 
     arguments = parser.parse_args()
 
@@ -27,6 +26,7 @@ def main():
 
     post_scraper = PostScraper()
     post_scraper.scrapePosts(subreddit, limit, sort_by, verbose, filename)
+
 
 if __name__ == '__main__':
     main()
