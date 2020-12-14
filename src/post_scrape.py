@@ -1,5 +1,6 @@
 import argparse
 from postscraper import PostScraper
+import json
 
 
 def main():
@@ -25,7 +26,14 @@ def main():
     filename = arguments.filename
 
     post_scraper = PostScraper()
-    post_scraper.scrapePosts(subreddit, limit, sort_by, verbose, filename)
+    results = post_scraper.scrape_posts(
+        subreddit,
+        limit,
+        sort_by,
+        verbose)
+
+    with open(filename, "w") as outfile:
+        json.dump(results, outfile, indent=4)
 
 
 if __name__ == '__main__':

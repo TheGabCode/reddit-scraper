@@ -1,4 +1,3 @@
-from bs4 import Tag, NavigableString, BeautifulSoup
 import json
 from managers.RequestManager import RequestManager
 from commentscraper import CommentScraper
@@ -18,17 +17,11 @@ def main():
     arguments = parser.parse_args()
 
     url = arguments.url
-    if (url.startswith("https://www")):
-        url = url.replace("www", "old", 1)
     sort_by = arguments.sort_by if arguments.sort_by else "confidence"
-    url = url + "?sort={sort_by}".format(sort_by=sort_by)
     filename = arguments.filename
 
-    request_manager = RequestManager()
     comment_scraper = CommentScraper()
-
-    soup = request_manager.getRedditSoup(url)
-    results = comment_scraper.parseCommentsFromDocument(soup)
+    results = comment_scraper.scrape_comments(url, sort_by)
 
     with open(filename, "w") as outfile:
         json.dump(results, outfile, indent=4)

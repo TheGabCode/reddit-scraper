@@ -9,7 +9,7 @@ class RequestManager:
     def __init__(self):
         self.agents = Constants.agents
 
-    def getRedditSoup(self, url):
+    def get_reddit_soup(self, url):
         headers = {
             "accept": ("text/html,application/xhtml+xml,application/xml;q=0.9"
                        ",image/avif,image/webp,image/apng,*/*;q=0.8,applicati"
@@ -32,9 +32,10 @@ class RequestManager:
 
             return BeautifulSoup(response.text, "html.parser")
         except ConnectionError:
+            print("Connection error, try again.")
             return BeautifulSoup("", "html.parser")
 
-    def postRedditSoup(self, url, payload):
+    def post_reddit_soup(self, url, payload):
         headers = {
             "accept": "application/json, text/javascript, */*; q=0.01",
             "accept-encoding": "gzip, deflate, br",
@@ -55,4 +56,5 @@ class RequestManager:
 
             return BeautifulSoup(response.text, "html.parser")
         except ConnectionError:
+            print("Connection error, try again.")
             return BeautifulSoup("", "html.parser")

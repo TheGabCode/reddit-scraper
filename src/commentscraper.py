@@ -8,10 +8,16 @@ from managers.RequestManager import RequestManager
 
 class CommentScraper:
     def __init__(self):
-        self.request_manager = RequestManager()
+        self._request_manager = RequestManager()
 
-    def parseCommentsFromDocument(self, document, get_children=False):
-        print("Parse")
+    def scrape_comments(self, url, sort_by):
+        if url.startswith("https://www"):
+            url = url.replace("www", "old", 1)
+
+        soup = self._request_manager.get_reddit_soup(url)
+        return self._parse_comments_from_document(soup)
+
+    def _parse_comments_from_document(self, document, get_children=False):
         comment_objects_list = []
 
         try:
@@ -26,25 +32,26 @@ class CommentScraper:
         first_comment = (container.find_all("div", class_="comment")
                          [1 if get_children else 0])
 
-        comment_objects_list.append(self.__extractCommentData(first_comment))
+        comment_objects_list.append(self._extract_comment_data(first_comment))
 
         for sibling in first_comment.next_siblings:
             is_tag = isinstance(sibling, Tag)
             is_comment = "comment" in sibling["class"]
             is_morechildren = "morechildren" in sibling["class"]
 
-            if (is_tag and is_comment):
-                comment_objects_list.append(self.__extractCommentData(sibling))
-            elif (is_tag and is_morechildren):
+            if is_tag and is_comment:
+                comment_objects_list.append(
+                    self._extract_comment_data(sibling))
+            elif is_tag and is_morechildren:
                 subreddit = (document.find("link", {"rel": "canonical"})
                              ["href"].split("/")[4])
 
-                comment_objects_list.extend(self.__getMoreComments(
+                comment_objects_list.extend(self._get_more_comments(
                     sibling, subreddit))
 
         return comment_objects_list
 
-    def __extractCommentData(self, comment_tag, recursive=True):
+    def _extract_comment_data(self, comment_tag, recursive=True):
         top_level_comment_object = {}
 
         score_tag = comment_tag.find("span", class_="score unvoted")
@@ -91,20 +98,22 @@ class CommentScraper:
         top_level_comment_object["comment_formatted"] = comment_formatted
         top_level_comment_object["comment_raw"] = comment_raw
 
-        if (num_children == 0 or not recursive):
+        if num_children == 0 or not recursive:
             return top_level_comment_object
         else:
-            nested_soup = self.request_manager.getRedditSoup(permalink_old)
-            parsed_replies = self.parseCommentsFromDocument(nested_soup, True)
+            nested_soup = self._request_manager.get_reddit_soup(permalink_old)
+            parsed_replies = self._parse_comments_from_document(
+                nested_soup,
+                True)
 
-            if (len(parsed_replies) == 0):
+            if len(parsed_replies) == 0:
                 return top_level_comment_object
 
             top_level_comment_object["replies"] = parsed_replies
 
             return top_level_comment_object
 
-    def __getMoreComments(self, morecomment_tag, subreddit):
+    def _get_more_comments(self, morecomment_tag, subreddit):
         morecomments_args = (morecomment_tag.a["onclick"]
                              .replace("return morechildren", "")
                              .replace("(", "")
@@ -131,7 +140,7 @@ class CommentScraper:
             "children": children
             }
 
-        more_soup = self.request_manager.postRedditSoup(
+        more_soup = self._request_manager.post_reddit_soup(
             "https://old.reddit.com/api/morechildren",
             payload)
 
@@ -143,13 +152,13 @@ class CommentScraper:
             comment_content = comment["data"]["content"]
             comment_tag_string = html.unescape(comment_content)
             comment_tag_soup = BeautifulSoup(comment_tag_string, "html.parser")
-            if (comment["kind"] == "more"):
-                more_comments.extend(self.__getMoreComments(
+            if comment["kind"] == "more":
+                more_comments.extend(self._get_more_comments(
                     comment_tag_soup.find("div", class_="morechildren"),
                     subreddit
                 ))
             else:
                 more_comments.append(
-                    self.__extractCommentData(comment_tag_soup))
+                    self._extract_comment_data(comment_tag_soup))
 
         return more_comments
