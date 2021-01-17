@@ -80,4 +80,4 @@ doc/_build/
 # Scraped results
 dump/*
 
-notebooks/*
+src/notebooks/*
