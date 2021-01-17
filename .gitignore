@@ -79,3 +79,5 @@ doc/_build/
 
 # Scraped results
 dump/*
+
+notebooks/*
